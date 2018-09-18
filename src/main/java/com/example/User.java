@@ -10,7 +10,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.Date;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.QueryParam;
 
 /**
  * Root resource (exposed at "api/user" path)
@@ -25,32 +26,41 @@ public class User {
      * @return String that will be returned as a text/plain response.
      */
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getIt() {
-        Date d = new Date();
-
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response get(@QueryParam("idType") String idType, @QueryParam("idNumber") String idNumber) {
         try {
+            // getCustomer Request
             Client client = Client.create();
-            WebResource webResource = client.resource("https://avocado.od-tech.my/api/customer?idType=PASSPORT&idNumber=A24098888");
+            WebResource webResource = client.resource("https://avocado.od-tech.my/api/customer?idType="+ idType +"&idNumber="+ idNumber);
             ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
-            JSONObject output = new JSONObject(response.getEntity(String.class)); 
-            JSONObject customerId = output.getJSONObject("customer").getJSONObject("id");
+            JSONObject output = new JSONObject(response.getEntity(String.class));
+            JSONObject customerMeta = output;
+            String customerId = output.getJSONObject("customer").get("id").toString();
 
-            System.out.println("POH!1");
-            System.out.println(output);
-            System.out.println(output.getJSONObject("meta"));
-
-            webResource = client.resource("https://avocado.od-tech.my/api/customerRole?customerId="+customerId.toString());
+            // getCustomerProfile Request
+            webResource = client.resource("https://avocado.od-tech.my/api/customerRole?customerId="+customerId);
             response = webResource.accept("application/json").get(ClientResponse.class);
-            output = new JSONObject(response.getEntity(String.class)); 
+            output = new JSONObject(response.getEntity(String.class));
+            String roles = output.get("roles").toString();
+            JSONArray rolesArray = new JSONArray(roles);
 
-            System.out.println("POH!2");
-            System.out.println(output);
-            // System.out.println(output.getJSONObject("roles"));
+            // custom key and return response
+            JSONObject result = new JSONObject();
+            for(int i = 0; i<customerMeta.names().length(); i++){
+                String key = customerMeta.names().getString(i);
+                result.put(key, customerMeta.getJSONObject(key));
+                if (key.compareTo("customer") == 0) {
+                    result.getJSONObject(key).put("roles", rolesArray);
+                    result.getJSONObject(key).getJSONObject("details").put("displayName", result.getJSONObject(key).getJSONObject("details").get("name"));
+                    result.getJSONObject(key).getJSONObject("details").remove("name");
+                    result.getJSONObject(key).getJSONObject("details").remove("salutation");
+                }
+            }
+            String resultString = result.toString();
+            return Response.ok(resultString, MediaType.APPLICATION_JSON).build();
+
         } catch (Exception e) {
-            System.out.println(e);
+            return Response.serverError().entity(e.getMessage()).build();
         }
-
-        return "popoh!" + d.toString();
     }
 }
