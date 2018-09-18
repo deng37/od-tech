@@ -31,17 +31,16 @@ public class Order {
     @Produces(MediaType.APPLICATION_JSON)
     public Response post(String input) {
         JSONObject inputJson = new JSONObject(input);
-        String customerId = inputJson.get("customerId").toString();
-        String startDate = inputJson.get("startDate").toString();
-        String endDate = inputJson.get("endDate").toString();
-        String statusCode = inputJson.get("statusCode").toString();
-        String startRecord = inputJson.get("startRecord").toString();
-        String recordLimit = inputJson.get("recordLimit").toString();
+        String customerId = "";
+        if (input.contains("customerId")) {
+            customerId = inputJson.get("customerId").toString();
+        }
         
         // parameter not given
-        if (customerId == null || customerId.trim().length() == 0) {
+        if (customerId.isEmpty()) {
             return Response.serverError().entity("customerId parameter must be given").build();
         }
+
         try {
             // getCustomer Request
             Client client = Client.create();
