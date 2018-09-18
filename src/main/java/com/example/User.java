@@ -28,6 +28,11 @@ public class User {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response get(@QueryParam("idType") String idType, @QueryParam("idNumber") String idNumber) {
+        // parameter not given
+        if ((idType == null || idType.trim().length() == 0) || (idNumber == null || idNumber.trim().length() == 0)) {
+            return Response.serverError().entity("idType and idNumber parameter must be given").build();
+        }
+
         try {
             // getCustomer Request
             Client client = Client.create();
