@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.PathParam;
 import java.util.Date;
 import java.text.SimpleDateFormat;
+import javax.ws.rs.HeaderParam;
 
 /**
  * Root resource (exposed at "api/order" path)
@@ -31,7 +32,12 @@ public class Order {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response post(String input) {
+    public Response post(String input, @HeaderParam("authorization") String authString) {
+        // not authenticate
+        if (authString == null || authString.compareTo("peekaboo") == 0) {
+            return Response.serverError().entity("authentication failed").build();
+        }
+
         // parameter not given
         if (input.isEmpty() || input == null) {
             return Response.serverError().entity("empty parameter, please give minimum customerId parameter").build();

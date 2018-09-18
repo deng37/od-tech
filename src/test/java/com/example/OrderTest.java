@@ -27,7 +27,7 @@ public class OrderTest extends JerseyTest {
     @Test
     public void testPost() {
         JSONObject bodyJson = new JSONObject().put("customerId", "1001");
-        Response output = target("/api/orders").request(MediaType.APPLICATION_JSON).post(Entity.json(bodyJson.toString()));
+        Response output = target("/api/orders").request(MediaType.APPLICATION_JSON).header("Authorization", "Basic peekaboo").post(Entity.json(bodyJson.toString()));
         assertEquals("should return status 200", 200, output.getStatus());
     }
 }

@@ -23,7 +23,7 @@ public class UserTest extends JerseyTest {
      */
     @Test
     public void testGet() {
-        Response output = target("/api/user").queryParam("idType","PASSPORT").queryParam("idNumber","A24098888").request().get();
+        Response output = target("/api/user").queryParam("idType","PASSPORT").queryParam("idNumber","A24098888").request().header("Authorization", "Basic peekaboo").get();
         assertEquals("should return status 200", 200, output.getStatus());
     }
 }
