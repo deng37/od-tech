@@ -65,7 +65,6 @@ public class Order {
             Client client = Client.create();
             WebResource webResource = client.resource("https://avocado.od-tech.my/api/orders");
             JSONObject bodyJson = new JSONObject().put("customerId", customerId).put("startDate", startDate).put("endDate", endDate).put("statusCode", statusCode).put("startRecord", startRecord).put("recordLimit", recordLimit);
-            System.out.println(bodyJson);
             ClientResponse response = webResource.header("Content-Type","application/json;charset=UTF-8").post(ClientResponse.class, bodyJson.toString());
             JSONObject output = new JSONObject(response.getEntity(String.class));
 
