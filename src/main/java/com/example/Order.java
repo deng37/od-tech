@@ -13,6 +13,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.PathParam;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 /**
  * Root resource (exposed at "api/order" path)
@@ -30,22 +32,40 @@ public class Order {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response post(String input) {
-        JSONObject inputJson = new JSONObject(input);
-        String customerId = "";
-        if (input.contains("customerId")) {
-            customerId = inputJson.get("customerId").toString();
-        }
-        
         // parameter not given
-        if (customerId.isEmpty()) {
-            return Response.serverError().entity("customerId parameter must be given").build();
+        if (input.isEmpty() || input == null) {
+            return Response.serverError().entity("empty parameter, please give minimum customerId parameter").build();
         }
 
         try {
-            // getCustomer Request
+            JSONObject inputJson = new JSONObject(input);
+            SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+            long DAY_IN_MS = 1000 * 60 * 60 * 24;
+
+            // parsing input parameter
+            String customerId = input.contains("customerId") ? inputJson.get("customerId").toString() : "";
+            String tempStartDate = input.contains("startDate") ? inputJson.get("startDate").toString() : "";
+            String tempEndDate = input.contains("endDate") ? inputJson.get("endDate").toString() : "";
+            Date endDate = new Date();
+            Date startDate = new Date(endDate.getTime() - (7 * DAY_IN_MS));
+            if (!tempStartDate.isEmpty() && !tempEndDate.isEmpty()) {
+                startDate = format.parse(tempStartDate);
+                endDate = format.parse(tempEndDate);
+            }
+            String statusCode = input.contains("statusCode") ? inputJson.get("statusCode").toString() : "";
+            String startRecord = input.contains("startRecord") ? inputJson.get("startRecord").toString() : "";
+            String recordLimit = input.contains("recordLimit") ? inputJson.get("recordLimit").toString() : "";
+
+            // no customer id
+            if (customerId.isEmpty()) {
+                return Response.serverError().entity("customerId parameter must be given").build();
+            }
+
+            // searchOrder
             Client client = Client.create();
             WebResource webResource = client.resource("https://avocado.od-tech.my/api/orders");
-            JSONObject bodyJson = new JSONObject().put("customerId", customerId);
+            JSONObject bodyJson = new JSONObject().put("customerId", customerId).put("startDate", startDate).put("endDate", endDate).put("statusCode", statusCode).put("startRecord", startRecord).put("recordLimit", recordLimit);
+            System.out.println(bodyJson);
             ClientResponse response = webResource.header("Content-Type","application/json;charset=UTF-8").post(ClientResponse.class, bodyJson.toString());
             JSONObject output = new JSONObject(response.getEntity(String.class));
 
